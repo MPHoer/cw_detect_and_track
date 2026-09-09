@@ -37,13 +37,14 @@ import traceback
 # --- CONFIG ---
 
 #CHECKPOINT_NAME = "ASM_perf_gt20"
-CHECKPOINT_NAME = "ASM_old_gt"
-GT_ANNOTATION = "_perfect_gt_annotations_20x20.coco"
+CHECKPOINT_NAME = "ASM_20x20"
+GT_ANNOTATION = "_annotations_20x20.coco"
 
-BASE_DIR = "D:/rf_detr_dataset"
-checkpoint = f"{BASE_DIR}/output/{CHECKPOINT_NAME}/checkpoint_best_ema.pth"
-IMG_DIR  = f"{BASE_DIR}/valid"                                  # folder with the images
-ANN_FILE = f"{BASE_DIR}/valid/{GT_ANNOTATION}.json"  # COCO-style GT
+BASE_DIR = r"D:\cw_rf_detr_dataset_raw"
+checkpoint = rf"{BASE_DIR}/output/{CHECKPOINT_NAME}/checkpoint_best_total.pth" #checkpoint_best_ema.pth
+IMG_DIR  = rf"{BASE_DIR}/valid"                                  # folder with the images
+ANN_FILE = rf"{BASE_DIR}/valid/{GT_ANNOTATION}.json"  # COCO-style GT
+
 
 # where to save results
 RESULTS_DIR = os.path.join(BASE_DIR, "results_rfdetr_eval_corrected")

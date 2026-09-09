@@ -117,7 +117,7 @@ if __name__ == '__main__':
     else:
         print(f"ASM: {SELECT_ASM}")
         dataset_path = r"D:\cw_rf_detr_dataset_raw"
-        run_name = f"ASM_{SELECT_GT_VARIANT}"
+        run_name = f"RAW_{SELECT_GT_VARIANT}"
     
     # Choose which set to activate for training in-place per dir
     select_annotations(dataset_path, variant=SELECT_GT_VARIANT)

@@ -12,8 +12,10 @@ Your images + object annotations
 Train RF-DETR → saved model checkpoint
        │
        ├─ Evaluate: predict boxes and compare with labelled boxes → metrics
-       └─ Track: predict boxes, link identities, optionally fill gaps → metrics + videos
+       └─ Track new images without labels → track IDs + JSON/CSV + videos
 ```
+
+**Already have a trained checkpoint and want to track new images? Go straight to [Tracking without ground truth](#4-track-new-timeseries-without-ground-truth).** You do not need to prepare COCO annotations, train again, or run evaluation first.
 
 ASM is optional image preprocessing, not part of RF-DETR or a requirement for tracking. This repository contains original experiment scripts with editable settings, rather than a single automated pipeline.
 
@@ -42,7 +44,7 @@ data/my_dataset/
 
 Use PNG/JPEG images readable as RGB. Grayscale microscopy images can be represented as three identical channels. Annotations must use the pixel coordinates of the actual saved images; if you crop or resize images yourself, update their labels accordingly. The trainer uses resolution 512 internally, so source images do not have to be manually resized to 512×512.
 
-The sequence subfolders are useful for detection and **required by these tracking scripts' grouping convention**. Filenames in JSON are relative to their split folder, using `/`. The folder layout follows [RF-DETR's COCO dataset convention](https://rfdetr.roboflow.com/learn/train/#dataset-structure); this repository pins RF-DETR 1.3.0, so newer API examples may differ.
+The sequence subfolders are useful for detection and group sequences for GT-based tracking evaluation. Tracking inference also accepts a flat folder containing one sequence. Filenames in JSON are relative to their split folder, using `/`. The folder layout follows [RF-DETR's COCO dataset convention](https://rfdetr.roboflow.com/learn/train/#dataset-structure); this repository pins RF-DETR 1.3.0, so newer API examples may differ.
 
 ### Annotation JSON
 
@@ -269,23 +271,89 @@ The output JSON contains settings, class names, and all image records, including
 
 Use `eval_rfdetr.py` for GT-based evaluation, or the tracking inference scripts below for videos and track tables. Tracking calls the same single-pass prediction helper directly; it does not load this standalone JSON. Flip TTA was removed after it did not improve the user's evaluation results. Previous versions remain in Git history.
 
-## 4. Run tracking postprocessing
+## 4. Track new timeseries without ground truth
 
-**Without ground truth:** use the new [tracking inference versions](src/tracking/inference/README.md). They read image folders and a checkpoint, use single-pass detection and save per-sequence videos/CSVs plus a complete tracks JSON. For example, run `python src/tracking/inference/trackpy_prune_inference.py` after configuring its paths. No COCO file is required.
+Use this workflow to **see detections and cell tracks on new images**. Input is a trained RF-DETR Medium checkpoint and an image folder. No annotation JSON, train/valid/test split, or evaluation run is needed.
 
-**With ground truth:** the historical evaluation workflow below remains available.
-
-Choose one script using the [tracking comparison guide](src/tracking/README.md). The backward gap-filling experiment is `backward_iou/postprocess_fill_holes.py`; the later forward workflow with pruning is `forward_trackpy/pp_fh_ss_prune.py`.
-
-**Input:** a trained checkpoint, prepared image sequences, and a COCO file supplying image paths/classes and evaluation labels. Configure the selected script's `BASE_DIR`, `CHECKPOINT_NAME`, `GT_ANNOTATION`, paths, tracking parameters, and `RESULTS_DIR` as for evaluation. The scripts run detection themselves; they do not read the detector evaluation report or a saved prediction file.
-
-```bash
-python src/tracking/backward_iou/postprocess_fill_holes.py
+```text
+Image sequences + trained checkpoint
+             ↓
+Single-pass detection on each frame
+             ↓
+Link detections + optional gap filling and cleanup
+             ↓
+Annotated MP4 + track CSV per sequence + tracks.json
 ```
 
-**Output:** predicted track IDs and optional interpolated detections in memory, plus text/JSON metric reports and annotated MP4 videos in that script's `RESULTS_DIR`. There is currently no CSV/JSON export of individual tracks. The tracking guide explains how to choose parameters and interpret the historical metrics.
+### Choose a tracking script
 
-The linking algorithms use detection geometry rather than RF-DETR internals, but detector loading, GT evaluation, and tracking remain combined in these files. Using another detector, tracking unlabelled data, or exporting reusable track tables requires separating those parts. All tracking scripts execute on import; run the chosen file as a script.
+The files in `src/tracking/inference/` are alternatives; run one of them.
+
+| Use case | Script |
+|---|---|
+| Later forward workflow: linking, gap filling, ID cleanup, and short-segment pruning | `trackpy_prune_inference.py` |
+| Historical dying-cell workflow: backward linking and gap filling | `backward_iou_fill_holes_inference.py` |
+| Compare simpler variants or parameter settings | See the [tracking inference guide](src/tracking/inference/README.md) for all six versions |
+
+Backward processing was used because dying cells became rounder and easier to detect near the end of these sequences. It starts linking from that end; it is not automatically better for sequences whose final frames are harder. Forward and backward association can produce different tracks. Pruning removes short fragments, but can also remove real cells visible for only a few frames. Choose using representative sequences; the historical settings are starting values for new data.
+
+### Configure and run
+
+1. **Prepare the images.** Use a flat folder for one timeseries, or one subfolder per sequence:
+
+   ```text
+   my_timeseries/
+   ├── sequence_A/
+   │   ├── frame_0001.png
+   │   └── frame_0002.png
+   └── sequence_B/
+       ├── frame_0001.png
+       └── frame_0002.png
+   ```
+
+   Each directory containing images becomes a separate sequence. Frames are sorted naturally by filename (`frame_2` before `frame_10`); use names that reflect acquisition order. Hidden files/directories are ignored. Supply individual 2D images, not a multi-page TIFF stack. Frames within a sequence must have the same dimensions. Use the image representation the checkpoint was trained on; these scripts do not perform ASM reconstruction.
+
+2. **Activate your installed project environment**, then edit these settings at the top of the chosen script. For example, in `src/tracking/inference/trackpy_prune_inference.py`:
+
+   ```python
+   IMAGE_ROOT = Path(r"D:\my_timeseries")
+   CHECKPOINT_PATH = Path(r"D:\cw_rf_detr_dataset_raw\output\RAW_20x20\checkpoint_best_ema.pth")
+   RESULTS_DIR = Path(r"D:\tracking_results\run_01")
+   RESOLUTION = 512
+   DETECTION_MIN_CONF = 0.4
+   OUTPUT_MIN_CONF = 0.4
+   VIDEO_FPS = 5
+   ```
+
+   Replace all paths with your actual locations and match `RESOLUTION` to training. Choose a **new** `RESULTS_DIR`: existing directories are refused. `DETECTION_MIN_CONF` filters model predictions before tracking; `OUTPUT_MIN_CONF` filters the saved/displayed results after tracking. `VIDEO_FPS` controls playback speed, not linking. Tracking settings such as `TRACKPY_MEMORY`, `MAX_HOLE_LEN`, and pruning thresholds are below these variables; the [inference guide](src/tracking/inference/README.md) explains their context.
+
+3. **Run from the repository root:**
+
+   ```bash
+   python src/tracking/inference/trackpy_prune_inference.py
+   ```
+
+   This runs detection and tracking together. Each image gets one model prediction, without TTA. Do not run `src/model/inference.py` beforehand: the tracking scripts call its prediction helper directly and do not read its exported JSON. Keep that file and `src/tracking/inference/_shared.py` in the repository.
+
+### Find and interpret the results
+
+Open your configured `RESULTS_DIR`. It contains:
+
+| Output | What to use it for |
+|---|---|
+| One `.mp4` per sequence | Inspect tracks visually: blue boxes are detections, orange boxes are interpolated gaps; labels show class and track ID |
+| One `.csv` per sequence | Analyse detections and trajectories: frame index, filename, class, track ID, box corners, score, and interpolation flag |
+| `tracks.json` | Read the complete run: settings, classes, and every frame, including frames with no retained detections |
+
+Box corners are `[x1, y1, x2, y2]` in original-image pixels, even when the preview video is enlarged. Frame indices start at zero and follow sorted image order, not elapsed time. A track is identified by **sequence + class + track ID**. Unlinked detections can have a blank/null ID; interpolated boxes are estimates between detections. Empty frames appear in JSON and videos but have no detection row in CSV.
+
+These outputs let you inspect results, but do not measure tracking accuracy without GT. For output details and algorithm differences, see the [tracking inference guide](src/tracking/inference/README.md).
+
+### Optional: evaluate tracking against ground truth
+
+The historical scripts in `src/tracking/backward_iou/` and `src/tracking/forward_trackpy/` additionally require a COCO file with image records, classes, and evaluation labels. They run detection themselves and save metric reports and annotated videos in their `RESULTS_DIR`; they do not export the new per-detection track tables. Use the [tracking comparison guide](src/tracking/README.md) to select and configure one. These historical scripts execute on import; run them as scripts.
+
+The linking algorithms use boxes and scores rather than RF-DETR internals. The inference workflow currently loads RF-DETR in `_shared.py`; using another model requires adapting that detection input while preserving the tracking data structure.
 
 ## Repository map
 

@@ -50,11 +50,11 @@ import cv2  # for drawing and video writing
 # --- CONFIG -------------
 # =========================
 
-CHECKPOINT_NAME = "ASM_perf_gt20"
-GT_ANNOTATION = "_perfect_gt_annotations_20x20.coco"
+CHECKPOINT_NAME = "ASM_20x20"
+GT_ANNOTATION = "_annotations_20x20.coco"
 
-BASE_DIR = "D:/rf_detr_dataset"
-checkpoint = f"{BASE_DIR}/output/{CHECKPOINT_NAME}/checkpoint_best_ema.pth"
+BASE_DIR = "D:/cw_rf_detr_dataset_raw"
+checkpoint = f"{BASE_DIR}/output/{CHECKPOINT_NAME}/checkpoint_best_total.pth" #checkpoint_best_ema.pth
 IMG_DIR = f"{BASE_DIR}/valid"                                  # folder with the images
 ANN_FILE = f"{BASE_DIR}/valid/{GT_ANNOTATION}.json"            # COCO-style GT
 

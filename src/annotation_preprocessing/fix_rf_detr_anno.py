@@ -20,10 +20,10 @@ import shutil
 from pathlib import Path
 
 # Root of your RF-DETR dataset
-DATASET_ROOT = Path("/Volumes/Max-HDD/cw_rf_detr_dataset_raw")
+DATASET_ROOT = Path("D:\cw_rf_detr_dataset_raw")
 
 SPLITS = ["train", "valid", "test"]
-ANN_FILENAME = "_annotations.coco.json"
+ANN_FILENAME = "_annotations_20x20.coco.json"
 
 
 def patch_categories(categories):

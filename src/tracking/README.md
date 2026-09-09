@@ -1,5 +1,7 @@
 # Choosing a tracking script
 
+**For time series without GT, use the [inference counterparts](inference/README.md): image folders and checkpoint in, annotated videos and track tables out.** This page describes the original GT-based evaluation experiments.
+
 These six files are alternative complete experiments: each loads RF-DETR detections, tracks them, evaluates against COCO annotations, and writes reports and videos. **Run one script, not all six in sequence.** They preserve the historical workflow; they are not yet a model-independent tracking API.
 
 ## Which file should I use?

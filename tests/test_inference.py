@@ -35,22 +35,22 @@ class FakeModel:
 
 
 class InferenceTests(unittest.TestCase):
-    def test_flips_restore_and_merge(self):
-        pixels = np.zeros((40, 80, 3), dtype=np.uint8)
-        pixels[5:15, 10:25] = 255
-        model = FakeModel()
-        boxes, scores, ids = inference.predict_image(model, Image.fromarray(pixels))
-        np.testing.assert_allclose(boxes, [[10, 5, 25, 15]])
-        self.assertEqual(model.calls, 3)
-        self.assertEqual(ids.tolist(), [1])
-        model.calls = 0
-        inference.predict_image(model, Image.fromarray(pixels), use_tta=False)
-        self.assertEqual(model.calls, 1)
-
-    def test_nms_keeps_distinct_cells_and_classes(self):
-        boxes = np.array([[0,0,10,10], [1,0,11,10], [0,0,10,10], [20,0,30,10]],dtype=float)
-        indices = inference.class_aware_nms(boxes, np.array([.9,.8,.7,.6]), np.array([1,1,2,1]), .5)
-        self.assertEqual(indices.tolist(), [0,2,3])
+    def test_single_pass_preserves_overlapping_boxes(self):
+        class OverlapModel:
+            calls = 0
+            def predict(self, image, threshold):
+                self.calls += 1
+                self.mode = image.mode
+                self.threshold = threshold
+                return SimpleNamespace(xyxy=np.array([[10,5,25,15],[11,5,26,15]]),
+                                       confidence=np.array([.9,.8]), class_id=np.array([1,1]))
+        model=OverlapModel()
+        boxes,scores,ids=inference.predict_image(model,Image.new('L',(80,40)),confidence=.4)
+        self.assertEqual(model.calls,1)
+        self.assertEqual(model.mode,'RGB')
+        self.assertEqual(model.threshold,.4)
+        np.testing.assert_allclose(boxes,[[10,5,25,15],[11,5,26,15]])
+        np.testing.assert_allclose(scores,[.9,.8])
 
     def test_empty_frames_export_and_hidden_exclusion(self):
         with tempfile.TemporaryDirectory() as directory:

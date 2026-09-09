@@ -257,6 +257,57 @@ These are in-memory predictions; they have no temporal identity. The evaluator c
 
 Reports include overlap-based and centre-distance precision/recall/F1, AP at the selected IoU, and AP averaged over IoUs 0.50–0.95. The AP calculation is custom, not the official COCO evaluator. Detector evaluation runs inference at threshold 0.0 before applying F1 cutoffs; tracking scripts retain different historical evaluation behavior.
 
+### Standalone inference, with optional flip TTA
+
+Use [src/model/inference.py](src/model/inference.py) to detect cells in raw lensfree images **without COCO ground truth**. This file exports detections; `eval_rfdetr.py` remains the separate GT-based evaluator.
+
+Edit the settings at the top:
+
+```python
+CHECKPOINT_PATH = Path(r"D:\cw_rf_detr_dataset_raw\output\RAW_20x20\checkpoint_best_ema.pth")
+IMAGE_ROOT = Path(r"D:\cw_rf_detr_dataset_raw\valid")
+OUTPUT_FILE = Path(r"D:\cw_rf_detr_dataset_raw\inference\raw_20x20_tta.json")
+RESOLUTION = 512  # match your training resolution
+USE_TTA = True
+CONF_THRESHOLD = 0.4
+NMS_IOU_THRESHOLD = 0.5
+```
+
+Use the actual checkpoint folder you trained (it may still be named `ASM_20x20`); folder naming does not determine image preprocessing. Use a model trained on the same raw-image representation. Then run:
+
+```bash
+python src/model/inference.py
+```
+
+With TTA enabled, the same model predicts on the original image, a horizontal flip, and a vertical flip. Boxes are transformed back into original coordinates. Class-aware NMS keeps the highest-score box and suppresses same-class boxes with IoU above `NMS_IOU_THRESHOLD`. This is three inference passes, no ASM, no retraining, and no score averaging. In crowded scenes suppression can remove distinct overlapping cells; tune and evaluate that tradeoff on validation data.
+
+Set `USE_TTA=False` and choose a different `OUTPUT_FILE` for the original single-pass baseline; no extra NMS is applied in that mode. Existing output files are refused. Image discovery is recursive and skips dot files/directories. Empty images remain as records with an empty detection list; read/inference failures stop the run instead of silently dropping frames.
+
+The JSON stores settings, class names, and an `images` list. Each image has its relative filename, width, height, and `detections`. Each detection contains `bbox_xyxy` in original image pixels, `score`, `class_id`, and `class_name` (null when unmapped). All returned classes are retained, including dummy if the model predicts it. The file contains no track IDs or GT labels.
+
+**Integration boundary:** `eval_rfdetr_tta.py` below uses the TTA helper for GT-based evaluation. The original evaluator and tracking scripts retain their original inference. No evaluator or tracker reads the standalone JSON automatically; running standalone inference does not change later tracking behavior. More detections alone are not evidence of improvement.
+
+Geometry, duplicate suppression, and output tests can be run without RF-DETR weights or a GPU:
+
+```bash
+python -m unittest discover -s tests -p "test_inference.py"
+```
+
+### Compare classic and TTA evaluation
+
+[eval_rfdetr_tta.py](src/model/eval_rfdetr_tta.py) is a second version of the detector evaluator. It uses the same metrics as `eval_rfdetr.py`, with the shared flip-TTA helper replacing normal prediction.
+
+Set the same `BASE_DIR`, `CHECKPOINT_NAME`, `GT_ANNOTATION`, `IMG_DIR`, `ANN_FILE`, `checkpoint`, `CONF_THR_LIST`, `IOU_THR`, and `CENTROID_TOL_PX` in both files. Their inherited defaults still reference the historical ASM experiment, so change them to your raw-model run. Configure `TTA_NMS_IOU_THR=0.5` in the TTA version. Do not confuse it with `IOU_THR`: the first suppresses duplicate predictions; the second matches predictions to GT.
+
+```bash
+python src/model/eval_rfdetr.py
+python src/model/eval_rfdetr_tta.py
+```
+
+Compare per-class IoU/centre F1 and AP in their text/JSON reports. By default, classic results go to `results_rfdetr_eval_corrected/`, TTA results to `results_rfdetr_eval_tta/`. Both predict with confidence cutoff 0.0 for AP and apply `CONF_THR_LIST` afterwards for F1. TTA reports record its three views and NMS threshold; it adds no score bonuses. This comparison measures flips plus their duplicate-suppression step, not a change in training. Check that both reports processed the same images successfully. Existing reports within each output directory are overwritten.
+
+The TTA evaluator imports the adjacent `inference.py`, so transfer both files to the GPU laptop. Its settings are local: it does not use the standalone script's hardcoded checkpoint/path/confidence settings. Tracking remains unchanged.
+
 ## 4. Run tracking postprocessing
 
 Choose one script using the [tracking comparison guide](src/tracking/README.md). The backward gap-filling experiment is `backward_iou/postprocess_fill_holes.py`; the later forward workflow with pruning is `forward_trackpy/pp_fh_ss_prune.py`.
@@ -275,7 +326,7 @@ The linking algorithms use detection geometry rather than RF-DETR internals, but
 
 - `src/annotation_preprocessing/`: optional annotation adaptations.
 - `src/image_preprocessing/`: optional ASM reconstruction and dataset assembly.
-- `src/model/`: training and detector evaluation.
+- `src/model/`: training, detector evaluation, and standalone inference with optional flip TTA.
 - `src/tracking/`: alternative detection-plus-tracking experiments and their comparison guide.
 - `results/`: recovered training configuration, environment, tuning results, and historical summary.
 - `data/` and `weights/`: optional local storage excluded from Git; scripts use configured paths and do not automatically discover these folders.

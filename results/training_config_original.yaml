@@ -1,0 +1,140 @@
+_wandb:
+    value:
+        cli_version: 0.23.0
+        e:
+            apdrwg0kik4875izg2nebgt4jdpqjl75:
+                codePath: align_and_annotate\correct_gts\train_rfdetr.py
+                codePathLocal: align_and_annotate\correct_gts\train_rfdetr.py
+                cpu_count: 8
+                cpu_count_logical: 16
+                cudaVersion: "12.7"
+                disk:
+                    /:
+                        total: "1001721761792"
+                        used: "985024262144"
+                email: maximilian.hoermann@helmholtz-munich.de
+                executable: C:\Users\Max\anaconda3\envs\rf_detr\python.exe
+                gpu: NVIDIA GeForce RTX 3060 Laptop GPU
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 3840
+                      memoryTotal: "6442450944"
+                      name: NVIDIA GeForce RTX 3060 Laptop GPU
+                      uuid: GPU-9cc46e8b-7444-3d16-1b52-7a754fd95afb
+                host: LAPTOP-A8NNNJ39
+                memory:
+                    total: "16558149632"
+                os: Windows-10-10.0.19045-SP0
+                program: C:\Users\Max\Desktop\phdprojects\align_and_annotate\correct_gts\train_rfdetr.py
+                python: CPython 3.11.14
+                root: D:\rf_detr_dataset\output\ASM_perf_gt20
+                startedAt: "2025-11-21T20:57:29.502133Z"
+                writerId: apdrwg0kik4875izg2nebgt4jdpqjl75
+        m: []
+        python_version: 3.11.14
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 53
+                - 71
+                - 98
+            "2":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 53
+                - 71
+                - 98
+            "3":
+                - 13
+                - 16
+            "4": 3.11.14
+            "5": 0.23.0
+            "6": 4.57.1
+            "8":
+                - 3
+            "12": 0.23.0
+            "13": windows-amd64
+batch_size:
+    value: 2
+checkpoint_interval:
+    value: 10
+class_names:
+    value: null
+cls_loss_coef:
+    value: 1
+dataset_dir:
+    value: D:\rf_detr_dataset
+dataset_file:
+    value: roboflow
+do_random_resize_via_padding:
+    value: false
+drop_path:
+    value: 0
+early_stopping:
+    value: true
+early_stopping_min_delta:
+    value: 0.001
+early_stopping_patience:
+    value: 10
+early_stopping_use_ema:
+    value: false
+ema_decay:
+    value: 0.993
+ema_tau:
+    value: 100
+epochs:
+    value: 10
+expanded_scales:
+    value: true
+grad_accum_steps:
+    value: 8
+group_detr:
+    value: 13
+ia_bce_loss:
+    value: true
+lr:
+    value: 0.0001
+lr_component_decay:
+    value: 0.7
+lr_drop:
+    value: 100
+lr_encoder:
+    value: 0.00015
+lr_vit_layer_decay:
+    value: 0.8
+multi_scale:
+    value: true
+num_select:
+    value: 300
+num_workers:
+    value: 2
+output_dir:
+    value: D:\rf_detr_dataset\output\ASM_perf_gt20
+project:
+    value: rf_detr_perf_gt20
+run:
+    value: ASM_perf_gt20
+run_test:
+    value: true
+segmentation_head:
+    value: false
+square_resize_div_64:
+    value: true
+tensorboard:
+    value: true
+use_ema:
+    value: true
+wandb:
+    value: true
+warmup_epochs:
+    value: 0
+weight_decay:
+    value: 0.0001

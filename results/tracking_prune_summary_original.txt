@@ -1,0 +1,69 @@
+==== RF-DETR EVAL + TRACKING (trackpy + hole-filled, per-sequence) ====
+
+checkpoint: D:/rf_detr_dataset/output/ASM_perf_gt20/checkpoint_best_ema.pth
+ann_file: D:/rf_detr_dataset/valid/_perfect_gt_annotations_20x20.coco.json
+img_dir: D:/rf_detr_dataset/valid
+classes: ['nucleus']
+CONF_THR_LIST: [0.4]
+IOU_THR: 0.5
+CENTROID_TOL_PX: 10
+TRACK_IOU_THR: 0.2
+TRACK_MAX_AGE: 30
+TRACK_MIN_CONF: 0.4
+MIN_TRACK_LEN_FOR_BONUS: 2
+SCORE_BONUS_PER_FRAME: 0.0
+MAX_SCORE: 1.0
+MAX_HOLE_LEN: 5
+INTERP_SCORE_PENALTY: 0.0
+HOLE_MIN_EDGE_CONF: 0.6
+TRACKPY_SEARCH_RANGE: 30
+TRACKPY_MEMORY: 10
+images_processed: 866
+raw_preds_total: 41971
+postproc_preds_total: 41710
+interpolated_detections: 108
+total_gt_tracks: 346
+total_gt_dets_with_id: 43499
+GT tracks: num=346, mean_len=125.72, median_len=115.00, min_len=2, max_len=193
+
+
+Threshold = 0.4
+Class          Prec   Recall       F1 (TP/FP/FN)
+nucleus       0.900    0.863    0.881 (37534/4176/5965)
+
+Centroid F1 (tolerance = 10px)
+Class          Prec   Recall       F1 (TP/FP/FN)
+nucleus       0.945    0.906    0.925 (39424/2286/4075)
+
+CLEAR MOT at THR=0.4: MOTA=0.760, MOTP(IoU)=0.756, TP=37538, FP=4172, FN=5961, IDS=317, GT_total=43499, matches=37538
+Global ID metrics at THR=0.4: IDP=0.834, IDR=0.799, IDF1=0.816, IDTP=34773, IDFP=6937, IDFN=8726, gt_tracks_with_match=328, pred_tracks_with_match=328
+Predicted track lengths (all detections) at THR=0.4: num=532, mean=78.40, median=81.50, min=2, max=193
+Predicted track lengths (detections >= THR) at THR=0.4: num=532, mean=78.40, median=81.50, min=2, max=193
+
+================ mAP summary (postprocessed) ================
+IoU threshold: 0.5
+AP[nucleus] = 0.8313
+mAP = 0.8313
+============================================
+
+============= COCO mAP@[0.25:0.95] (postprocessed) =============
+IoU AP[nucleus] mAP
+0.25 0.8991 0.8991
+0.30 0.8948 0.8948
+0.35 0.8891 0.8891
+0.40 0.8814 0.8814
+0.45 0.8646 0.8646
+0.50 0.8313 0.8313
+0.55 0.7736 0.7736
+0.60 0.6750 0.6750
+0.65 0.5411 0.5411
+0.70 0.4072 0.4072
+0.75 0.2704 0.2704
+0.80 0.1363 0.1363
+0.85 0.0427 0.0427
+0.90 0.0059 0.0059
+0.95 0.0001 0.0001
+----------------------------------------------
+AP[nucleus]@[0.25:0.95] = 0.5408
+COCO mAP@[0.25:0.95] = 0.5408
+==============================================

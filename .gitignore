@@ -1,0 +1,13 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+weights/*
+!weights/.gitkeep
+data/*
+!data/.gitkeep
+*.pth
+*.pt
+*.mp4

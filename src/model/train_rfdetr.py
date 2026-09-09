@@ -48,6 +48,7 @@ def select_annotations(dataset_root: str, variant: str):
         "perf_gt": "_perfect_gt_annotations.coco.json",
         "perf_gt20": "_perfect_gt_annotations_20x20.coco.json",
         "old_gt": "_annotations_oldpoints.coco.json",
+        "20x20": "_annotations_20x20.coco.json",
     }
     if variant not in name_map:
         raise ValueError(f"Unknown variant '{variant}'. Choose one of {list(name_map.keys())}.")
@@ -71,7 +72,7 @@ def select_annotations(dataset_root: str, variant: str):
 if __name__ == '__main__':
     # Variablen
     SELECT_ASM = True
-    SELECT_GT_VARIANT = "old_gt" # Choose which annotations to activate for training: one of {"Alex", "bf_hoechst", "hoechst"}
+    SELECT_GT_VARIANT = "20x20" # Choose which annotations to activate for training: one of {"Alex", "bf_hoechst", "hoechst"}
 
    
 

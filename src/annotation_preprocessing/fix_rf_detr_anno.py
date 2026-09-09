@@ -20,7 +20,7 @@ import shutil
 from pathlib import Path
 
 # Root of your RF-DETR dataset
-DATASET_ROOT = Path(r"D:\rf_detr_dataset")
+DATASET_ROOT = Path("/Volumes/Max-HDD/cw_rf_detr_dataset_raw")
 
 SPLITS = ["train", "valid", "test"]
 ANN_FILENAME = "_annotations.coco.json"
